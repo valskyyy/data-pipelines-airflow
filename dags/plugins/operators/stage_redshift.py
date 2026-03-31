@@ -1,7 +1,7 @@
 from airflow.hooks.postgres_hook import PostgresHook
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
-from airflow.contrib.hooks.aws_hook import AwsHook
+from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
 
 class StageToRedshiftOperator(BaseOperator):
     ui_color = '#358140'
@@ -25,7 +25,7 @@ class StageToRedshiftOperator(BaseOperator):
     def execute(self, context):
     # Étape 1 - Connexion AWS
         self.log.info("Connecting to AWS")
-        aws_hook = AwsHook(self.aws_credentials_id)
+        aws_hook = AwsBaseHook(self.aws_credentials_id, client_type='s3')
         credentials = aws_hook.get_credentials()
 
     # Étape 2 - Connexion Redshift
