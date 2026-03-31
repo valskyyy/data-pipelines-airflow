@@ -6,7 +6,7 @@ class LoadDimensionOperator(BaseOperator):
 
     ui_color = '#80BD9E'
 
-        @apply_defaults
+    @apply_defaults
     def __init__(self,
                  redshift_conn_id="",
                  table="",
