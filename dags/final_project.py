@@ -34,8 +34,8 @@ def final_project():
         redshift_conn_id="redshift",
         aws_credentials_id="aws_credentials",
         table="staging_events",
-        s3_bucket="udacity-dend",
-        s3_key="log_data"
+        s3_bucket="sparkify-vl",
+        s3_key="log-data"
     )
 
     stage_songs_to_redshift = StageToRedshiftOperator(
@@ -43,8 +43,9 @@ def final_project():
         redshift_conn_id="redshift",
         aws_credentials_id="aws_credentials",
         table="staging_songs",
-        s3_bucket="udacity-dend",
-        s3_key="song-data"
+        s3_bucket="sparkify-vl",
+        s3_key="song-data",
+        json_path="auto"
     )
 
     load_songplays_table = LoadFactOperator(
@@ -90,8 +91,8 @@ def final_project():
         task_id='Run_data_quality_checks',
         redshift_conn_id="redshift",
         tests=[
-            {"sql": "SELECT COUNT(*) FROM users WHERE userid IS NULL", "expected": 0},
-            {"sql": "SELECT COUNT(*) FROM songs WHERE songid IS NULL", "expected": 0}
+            {"sql": "SELECT CASE WHEN COUNT(*) > 0 THEN 0 ELSE 1 END FROM users", "expected": 0},
+            {"sql": "SELECT CASE WHEN COUNT(*) > 0 THEN 0 ELSE 1 END FROM songs", "expected": 0}
             ]
     )
 

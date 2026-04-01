@@ -5,7 +5,8 @@ from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
 
 class StageToRedshiftOperator(BaseOperator):
     ui_color = '#358140'
-    template_fields=("s3_key",)
+    template_fields = ("s3_key",)
+
     @apply_defaults
     def __init__(self,
                  redshift_conn_id="",
@@ -13,30 +14,28 @@ class StageToRedshiftOperator(BaseOperator):
                  table="",
                  s3_bucket="",
                  s3_key="",
+                 json_path="auto",
                  *args, **kwargs):
-
         super(StageToRedshiftOperator, self).__init__(*args, **kwargs)
         self.redshift_conn_id = redshift_conn_id
         self.aws_credentials_id = aws_credentials_id
         self.table = table
         self.s3_bucket = s3_bucket
         self.s3_key = s3_key
+        self.json_path = json_path
 
     def execute(self, context):
-    # Étape 1 - Connexion AWS
+        # Étape 1 - Connexion AWS
         self.log.info("Connecting to AWS")
-        aws_hook = AwsBaseHook(self.aws_credentials_id, client_type='s3')
+        aws_hook = AwsBaseHook(aws_conn_id=self.aws_credentials_id, client_type='s3')
         credentials = aws_hook.get_credentials()
-
-    # Étape 2 - Connexion Redshift
+        # Étape 2 - Connexion Redshift
         self.log.info("Connecting to Redshift")
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
-
-    # Étape 3 - Vider la table
+        # Étape 3 - Vider la table
         self.log.info(f"Clearing data from {self.table}")
         redshift.run(f"DELETE FROM {self.table}")
-
-    # Étape 4 - Copier les données depuis S3
+        # Étape 4 - Copier les données depuis S3
         self.log.info(f"Copying data from S3 to Redshift table {self.table}")
         s3_path = f"s3://{self.s3_bucket}/{self.s3_key}"
         sql = f"""
@@ -44,11 +43,6 @@ class StageToRedshiftOperator(BaseOperator):
             FROM '{s3_path}'
             ACCESS_KEY_ID '{credentials.access_key}'
             SECRET_ACCESS_KEY '{credentials.secret_key}'
-            FORMAT AS JSON 'auto'
-    """
+            FORMAT AS JSON '{self.json_path}'
+        """
         redshift.run(sql)
-
-
-
-
-
