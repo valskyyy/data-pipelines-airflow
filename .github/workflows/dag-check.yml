@@ -8,8 +8,12 @@ on:
 
 jobs:
   dag-check:
-    name: Validate Airflow DAGs
+    name: Validate Airflow DAGs (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
 
     steps:
 
@@ -19,28 +23,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
           
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # ── NOUVELLE NOTION : les variables d'environnement ─────
-      # "env" permet de définir des variables que le step peut lire.
-      #
-      # AIRFLOW_HOME : Airflow a besoin de savoir où il "habite".
-      #   On le pointe vers le dossier airflow/ de ton repo.
-      #   "${{ github.workspace }}" c'est le chemin absolu du repo
-      #   sur la machine virtuelle (GitHub le remplit tout seul).
-      #
-      # PYTHONPATH : quand ton DAG fait "from operators.stage_redshift
-      #   import ...", Python cherche le dossier "operators" quelque part.
-      #   En prod, Airflow ajoute le dossier plugins/ automatiquement.
-      #   En CI, il faut le faire nous-mêmes en ajoutant ce chemin ici.
-      #
-      # ── NOUVELLE NOTION : le pipe "|" après "run:" ──────────
-      # Le "|" permet d'écrire un script sur plusieurs lignes
-      # au lieu d'une seule commande. Ici on lance un petit script
-      # Python directement, sans créer de fichier séparé.
       - name: Check DAG integrity
         env:
           AIRFLOW_HOME: ${{ github.workspace }}/airflow
