@@ -26,5 +26,5 @@ class DataQualityOperator(BaseOperator):
             records = redshift.get_records(sql)
             result = records[0][0]
             if result != expected:
-                raise ValueError(f"Test échoué ! Résultat : {result}, Attendu : {expected}")
+                raise ValueError("Test échoué ! Résultat : {result}, Attendu : {expected}")
             self.log.info(f"Test réussi ! Résultat : {result}")

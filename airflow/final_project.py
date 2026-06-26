@@ -1,6 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 import pendulum
-import os
 from airflow.decorators import dag
 from airflow.operators.dummy_operator import DummyOperator
 from final_project_operators.stage_redshift import StageToRedshiftOperator
@@ -105,5 +104,3 @@ def final_project():
     run_quality_checks >> end_operator
 
 final_project_dag = final_project()
-
-x
