@@ -1,0 +1,61 @@
+name: DAG Integrity Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  dag-check:
+    name: Validate Airflow DAGs
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ── NOUVELLE NOTION : les variables d'environnement ─────
+      # "env" permet de définir des variables que le step peut lire.
+      #
+      # AIRFLOW_HOME : Airflow a besoin de savoir où il "habite".
+      #   On le pointe vers le dossier airflow/ de ton repo.
+      #   "${{ github.workspace }}" c'est le chemin absolu du repo
+      #   sur la machine virtuelle (GitHub le remplit tout seul).
+      #
+      # PYTHONPATH : quand ton DAG fait "from operators.stage_redshift
+      #   import ...", Python cherche le dossier "operators" quelque part.
+      #   En prod, Airflow ajoute le dossier plugins/ automatiquement.
+      #   En CI, il faut le faire nous-mêmes en ajoutant ce chemin ici.
+      #
+      # ── NOUVELLE NOTION : le pipe "|" après "run:" ──────────
+      # Le "|" permet d'écrire un script sur plusieurs lignes
+      # au lieu d'une seule commande. Ici on lance un petit script
+      # Python directement, sans créer de fichier séparé.
+      - name: Check DAG integrity
+        env:
+          AIRFLOW_HOME: ${{ github.workspace }}/airflow
+          PYTHONPATH: ${{ github.workspace }}/airflow/plugins
+        run: |
+          python -c "
+          from airflow.models import DagBag
+
+          dag_bag = DagBag(dag_folder='airflow/dags', include_examples=False)
+
+          if dag_bag.import_errors:
+              for dag_file, error in dag_bag.import_errors.items():
+                  print(f'ERROR in {dag_file}:')
+                  print(error)
+              raise SystemExit('DAG import errors found')
+
+          print(f'All good! {len(dag_bag.dags)} DAG(s) loaded successfully.')
+          "
