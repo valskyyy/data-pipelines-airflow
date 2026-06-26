@@ -1,21 +1,12 @@
-# ============================================================
-# WORKFLOW 3 : SQL LINT
-# Fichier : .github/workflows/sql-lint.yml
-#
-# Objectif : vérifier la qualité du SQL dans le projet.
-# sqlfluff est un linter SQL, l'équivalent de ruff mais pour SQL.
-# Il vérifie le style, les conventions, et certaines erreurs.
-# ============================================================
-
 name: SQL Lint
 
 on:
   push:
     branches: [main]
-
     paths:
       - "airflow/dags/plugins/helpers/**"
       - "**/*.sql"
+
   pull_request:
     branches: [main]
     paths:
@@ -45,19 +36,24 @@ jobs:
           mkdir -p tmp_sql
           python -c "
           import re
+          import textwrap
 
           with open('airflow/dags/plugins/helpers/final_project_sql_statements.py') as f:
               content = f.read()
 
-          # Cherche toutes les chaînes entre triple quotes
           pattern = r'\"\"\"(.*?)\"\"\"'
           matches = re.findall(pattern, content, re.DOTALL)
 
           for i, sql in enumerate(matches):
+              # textwrap.dedent supprime l'indentation commune à toutes
+              # les lignes. C'est ça qui manquait : le SQL sortait avec
+              # 8 espaces devant chaque ligne (l'indentation du Python),
+              # et sqlfluff croyait que c'était du SQL mal indenté.
+              cleaned = textwrap.dedent(sql).strip() + '\n'
               with open(f'tmp_sql/query_{i}.sql', 'w') as f:
-                  f.write(sql.strip())
+                  f.write(cleaned)
               print(f'Extracted query_{i}.sql')
           "
-
+          
       - name: Run SQL lint
         run: sqlfluff lint tmp_sql/ --dialect postgres
