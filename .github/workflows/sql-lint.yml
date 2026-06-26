@@ -1,16 +1,25 @@
+# ============================================================
+# WORKFLOW 3 : SQL LINT
+# Fichier : .github/workflows/sql-lint.yml
+#
+# Objectif : vérifier la qualité du SQL dans le projet.
+# sqlfluff est un linter SQL, l'équivalent de ruff mais pour SQL.
+# Il vérifie le style, les conventions, et certaines erreurs.
+# ============================================================
 
 name: SQL Lint
 
 on:
   push:
     branches: [main]
+
     paths:
-      - "airflow/plugins/helpers/**"
+      - "airflow/dags/plugins/helpers/**"
       - "**/*.sql"
   pull_request:
     branches: [main]
     paths:
-      - "airflow/plugins/helpers/**"
+      - "airflow/dags/plugins/helpers/**"
       - "**/*.sql"
 
 jobs:
@@ -37,9 +46,10 @@ jobs:
           python -c "
           import re
 
-          with open('airflow/plugins/helpers/final_project_sql_statements.py') as f:
+          with open('airflow/dags/plugins/helpers/final_project_sql_statements.py') as f:
               content = f.read()
 
+          # Cherche toutes les chaînes entre triple quotes
           pattern = r'\"\"\"(.*?)\"\"\"'
           matches = re.findall(pattern, content, re.DOTALL)
 
