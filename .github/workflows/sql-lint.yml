@@ -40,7 +40,6 @@ jobs:
           with open('airflow/plugins/helpers/final_project_sql_statements.py') as f:
               content = f.read()
 
-          # Cherche toutes les chaînes entre triple quotes
           pattern = r'\"\"\"(.*?)\"\"\"'
           matches = re.findall(pattern, content, re.DOTALL)
 
