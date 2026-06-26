@@ -19,7 +19,7 @@ class DataQualityOperator(BaseOperator):
     def execute(self, context):
         self.log.info("Connecting to Redshift")
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
-        self.log.info(f"Perform quality tests")
+        self.log.info("Perform quality tests")
         for test in self.tests:
             sql = test["sql"]
             expected = test["expected"]
@@ -27,4 +27,4 @@ class DataQualityOperator(BaseOperator):
             result = records[0][0]
             if result != expected:
                 raise ValueError("Test échoué ! Résultat : {result}, Attendu : {expected}")
-            self.log.info(f"Test réussi ! Résultat : {result}")
+            self.log.info("Test réussi ! Résultat : {result}")
