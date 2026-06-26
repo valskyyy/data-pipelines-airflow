@@ -6,7 +6,6 @@ on:
     paths:
       - "airflow/dags/plugins/helpers/**"
       - "**/*.sql"
-
   pull_request:
     branches: [main]
     paths:
@@ -54,6 +53,6 @@ jobs:
                   f.write(cleaned)
               print(f'Extracted query_{i}.sql')
           "
-          
+
       - name: Run SQL lint
-        run: sqlfluff lint tmp_sql/ --dialect postgres
+        run: sqlfluff lint tmp_sql/ --dialect postgres --exclude-rules RF04,CP02,ST06

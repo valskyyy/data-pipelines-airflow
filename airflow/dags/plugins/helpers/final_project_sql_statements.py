@@ -18,9 +18,9 @@ class SqlQueries:
             WHERE page = 'NextSong'
         ) AS events
         LEFT JOIN staging_songs AS songs
-            ON events.song = songs.title
-            AND events.artist = songs.artist_name
-            AND events.length = songs.duration
+                ON events.song = songs.title
+                AND events.artist = songs.artist_name
+                AND events.length = songs.duration
     """)
 
     user_table_insert = ("""
