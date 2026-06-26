@@ -1,0 +1,58 @@
+name: SQL Lint
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "airflow/dags/plugins/helpers/**"
+      - "**/*.sql"
+  pull_request:
+    branches: [main]
+    paths:
+      - "airflow/dags/plugins/helpers/**"
+      - "**/*.sql"
+
+jobs:
+  sql-lint:
+    name: Check SQL quality
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install sqlfluff
+        run: pip install sqlfluff
+
+      - name: Extract SQL from Python file
+        run: |
+          mkdir -p tmp_sql
+          python -c "
+          import re
+          import textwrap
+
+          with open('airflow/dags/plugins/helpers/final_project_sql_statements.py') as f:
+              content = f.read()
+
+          pattern = r'\"\"\"(.*?)\"\"\"'
+          matches = re.findall(pattern, content, re.DOTALL)
+
+          for i, sql in enumerate(matches):
+              # textwrap.dedent supprime l'indentation commune à toutes
+              # les lignes. C'est ça qui manquait : le SQL sortait avec
+              # 8 espaces devant chaque ligne (l'indentation du Python),
+              # et sqlfluff croyait que c'était du SQL mal indenté.
+              cleaned = textwrap.dedent(sql).strip() + '\n'
+              with open(f'tmp_sql/query_{i}.sql', 'w') as f:
+                  f.write(cleaned)
+              print(f'Extracted query_{i}.sql')
+          "
+
+      - name: Run SQL lint
+        run: sqlfluff lint tmp_sql/ --dialect postgres --exclude-rules RF04,CP02,ST06
